@@ -294,12 +294,32 @@ async def generate_topic_summary(text: Optional[str]) -> Optional[str]:
         import asyncio
         import os
         
-        # SECURITY: Explicitly use localhost to ensure no external data transmission
-        # Only process locally - never send to remote Ollama instances
+        # SECURITY: By default, use localhost to ensure no external data transmission
+        # Allow Railway internal service URLs (e.g., http://ollama-service:11434)
+        # for same-network communication within Railway
         ollama_host = os.getenv('OLLAMA_HOST', 'http://localhost:11434')
-        if not ollama_host.startswith(('http://localhost', 'http://127.0.0.1')):
-            logger.warning(f"OLLAMA_HOST is set to {ollama_host} - this may send data externally! Using localhost instead.")
-            ollama_host = 'http://localhost:11434'
+        
+        # Allow localhost, 127.0.0.1, or Railway internal service URLs
+        # Railway services can communicate via service names (e.g., ollama-service:11434)
+        allowed_hosts = (
+            'http://localhost', 'http://127.0.0.1',
+            'http://ollama-service',  # Railway service name
+            'https://localhost', 'https://127.0.0.1'
+        )
+        
+        if not any(ollama_host.startswith(host) for host in allowed_hosts):
+            # Check if it's a Railway internal URL (service name without http://)
+            if ':' in ollama_host and not ollama_host.startswith('http'):
+                # Assume it's a Railway service name, add http://
+                ollama_host = f'http://{ollama_host}'
+                logger.info(f"Using Railway internal service: {ollama_host}")
+            else:
+                logger.warning(
+                    f"OLLAMA_HOST is set to {ollama_host} - this may send data externally! "
+                    f"Allowed: localhost, 127.0.0.1, or Railway service names. "
+                    f"Falling back to localhost."
+                )
+                ollama_host = 'http://localhost:11434'
         
         # Truncate very long messages to avoid slow processing
         truncated = text[:500] if len(text) > 500 else text

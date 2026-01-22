@@ -44,9 +44,27 @@ async def get_userbot_client() -> TelegramClient:
     global _userbot_client
     
     if _userbot_client is None:
+        import os
+        import base64
+        
         config = get_config()
+        session_name = "secretary_session"
+        
+        # Support SESSION_DATA environment variable (base64-encoded session file)
+        # This makes Railway deployment easier - can store session as env var
+        session_data_env = os.getenv("SESSION_DATA")
+        if session_data_env:
+            try:
+                # Decode base64 session data and write to file
+                session_bytes = base64.b64decode(session_data_env)
+                with open(f"{session_name}.session", "wb") as f:
+                    f.write(session_bytes)
+                logger.info("Session file created from SESSION_DATA environment variable")
+            except Exception as e:
+                logger.warning(f"Failed to decode SESSION_DATA: {e}. Will use file-based session.")
+        
         _userbot_client = TelegramClient(
-            "secretary_session",  # Session file name
+            session_name,  # Session file name
             config.telegram.api_id,
             config.telegram.api_hash,
         )

@@ -9,7 +9,7 @@ A personal secretary bot for Telegram that monitors all messages, categorizes th
 - 📊 **Smart Prioritization**: Scores messages based on mentions, questions, and high-priority senders
 - 📝 **Periodic Summaries**: Sends formatted summaries every 4 hours (configurable)
 - 🏷️ **Interactive Classification**: Inline buttons to classify messages as High/Medium/Low priority
-- 🤖 **AI Topic Summaries**: Uses local Ollama LLM to generate 3-word topic summaries (optional)
+- 🤖 **AI Topic Summaries**: Optional - Uses local Ollama LLM to generate 3-word topic summaries (works without Ollama, just no topic summaries)
 - 🧠 **ML-Ready**: Collects labeled data for future machine learning improvements
 
 ## Project Structure
@@ -94,6 +94,10 @@ MIN_PRIORITY_SCORE=1
 WARNING_THRESHOLD_SCORE=5
 TIMEZONE=America/Sao_Paulo
 OLLAMA_HOST=http://localhost:11434
+
+# Optional: Session file as base64 (for Railway deployment)
+# Generate with: python -c "import base64; print(base64.b64encode(open('secretary_session.session', 'rb').read()).decode())"
+# SESSION_DATA=<base64_encoded_session_file>
 ```
 
 ### 6. First Run (Authentication)
@@ -166,7 +170,7 @@ Messages are scored for prioritization:
 ## Security Notes
 
 - ⚠️ **Never commit** `.env`, `.session`, or `.db` files
-- ⚠️ **Ollama Privacy**: By default, Ollama runs locally and never sends data externally. Keep `OLLAMA_HOST` set to `localhost` for maximum privacy.
+- ⚠️ **Ollama Privacy**: Optional feature - By default, Ollama runs locally and never sends data externally. Keep `OLLAMA_HOST` set to `localhost` for maximum privacy. **The bot works perfectly without Ollama** - you just won't get AI-generated topic summaries.
 - ⚠️ Message text is stored in your database (local SQLite or remote PostgreSQL)
 - ⚠️ No message content is logged to console (only character counts)
 - ⚠️ Bot only responds to the configured `CLIENT_USER_ID`
